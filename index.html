@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Essencial para responsividade -->
     <title>Reta Numérica Interativa</title>
     <link rel="stylesheet" href="style.css">
 </head>
@@ -18,14 +18,15 @@
 
         <!-- Conteúdo das Abas -->
         <div class="tab-content">
-            <!-- Aba: Exploração Manual (Inicialmente Ativa) -->
+            <!-- Aba: Exploração Manual -->
             <div id="manualContent" class="tab-pane active">
                 <fieldset id="manualControls">
                     <legend>Controle Manual</legend>
                     <div class="controles">
                         <div class="input-group">
                             <label for="startNum">Começar em:</label>
-                            <input type="number" id="startNum" value="0">
+                            <!-- Mudança aqui: type="text" e inputmode="numeric" -->
+                            <input type="text" inputmode="numeric" id="startNum" value="0" pattern="-?[0-9]+">
                         </div>
                         <div class="input-group">
                             <label for="operation">Operação:</label>
@@ -38,6 +39,7 @@
                         </div>
                         <div class="input-group">
                             <label for="valueNum">Valor:</label>
+                            <!-- Mantido type="number" pois é sempre positivo -->
                             <input type="number" id="valueNum" value="1" min="1">
                         </div>
                         <button id="executeBtn">Mover!</button>
@@ -53,11 +55,11 @@
                         <div class="input-group">
                             <label for="difficulty">Nível:</label>
                             <select id="difficulty">
-                                <option value="1">Nível 1 (Básico)</option>
-                                <option value="2">Nível 2 (Cruzando Zero)</option>
-                                <option value="3">Nível 3 (+ Negativos)</option>
-                                <option value="4">Nível 4 (- Negativos)</option>
-                                <option value="5">Nível 5 (Misto)</option>
+                                <option value="1">Nível 1</option>
+                                <option value="2">Nível 2</option>
+                                <option value="3">Nível 3</option>
+                                <option value="4">Nível 4</option>
+                                <option value="5">Nível 5</option>
                             </select>
                         </div>
                         <button id="generateProblemBtn">Gerar Novo Problema</button>
@@ -69,7 +71,8 @@
 
                     <div class="answer-area">
                         <label for="userAnswer">Sua Resposta:</label>
-                        <input type="number" id="userAnswer" placeholder="Digite o resultado" disabled>
+                        <!-- Mudança aqui: type="text" e inputmode="numeric" -->
+                        <input type="text" inputmode="numeric" id="userAnswer" placeholder="Digite o resultado" pattern="-?[0-9]+" disabled>
                         <button id="checkAnswerBtn" disabled>Verificar</button>
                     </div>
                     <div id="feedback" class="feedback-area">
@@ -79,7 +82,7 @@
             </div>
         </div>
 
-        <!-- Visualização e Resultados (Fora das Abas - Sempre Visível) -->
+        <!-- Visualização e Resultados -->
         <div class="visualizacao">
             <div id="numberLineContainer">
                 <div id="numberLine"></div>
@@ -93,7 +96,6 @@
             <p id="explanation">Explicação: --</p>
             <h2>Resultado Final: <span id="finalResult">?</span></h2>
         </div>
-
     </div>
 
     <script src="script.js"></script>
