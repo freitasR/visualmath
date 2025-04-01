@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reta Numérica Interativa</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Explorando a Reta Numérica! 🚀</h1>
+
+        <!-- Botões das Abas -->
+        <div class="tab-buttons">
+            <button class="tab-button active" data-tab="manual">Exploração Manual</button>
+            <button class="tab-button" data-tab="generator">Gerador de Problemas</button>
+        </div>
+
+        <!-- Conteúdo das Abas -->
+        <div class="tab-content">
+            <!-- Aba: Exploração Manual (Inicialmente Ativa) -->
+            <div id="manualContent" class="tab-pane active">
+                <fieldset id="manualControls">
+                    <legend>Controle Manual</legend>
+                    <div class="controles">
+                        <div class="input-group">
+                            <label for="startNum">Começar em:</label>
+                            <input type="number" id="startNum" value="0">
+                        </div>
+                        <div class="input-group">
+                            <label for="operation">Operação:</label>
+                            <select id="operation">
+                                <option value="add_pos">(+) Adicionar Positivo</option>
+                                <option value="add_neg">(+) Adicionar Negativo</option>
+                                <option value="sub_pos">(-) Subtrair Positivo</option>
+                                <option value="sub_neg">(-) Subtrair Negativo</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label for="valueNum">Valor:</label>
+                            <input type="number" id="valueNum" value="1" min="1">
+                        </div>
+                        <button id="executeBtn">Mover!</button>
+                    </div>
+                </fieldset>
+            </div>
+
+            <!-- Aba: Gerador de Problemas -->
+            <div id="generatorContent" class="tab-pane">
+                <fieldset id="problemGeneratorSection">
+                    <legend>Gerador de Problemas</legend>
+                    <div class="controles problem-controls">
+                        <div class="input-group">
+                            <label for="difficulty">Nível:</label>
+                            <select id="difficulty">
+                                <option value="1">Nível 1 (Básico)</option>
+                                <option value="2">Nível 2 (Cruzando Zero)</option>
+                                <option value="3">Nível 3 (+ Negativos)</option>
+                                <option value="4">Nível 4 (- Negativos)</option>
+                                <option value="5">Nível 5 (Misto)</option>
+                            </select>
+                        </div>
+                        <button id="generateProblemBtn">Gerar Novo Problema</button>
+                    </div>
+
+                    <div id="problemDisplay" class="problem-area">
+                        Problema aparecerá aqui...
+                    </div>
+
+                    <div class="answer-area">
+                        <label for="userAnswer">Sua Resposta:</label>
+                        <input type="number" id="userAnswer" placeholder="Digite o resultado" disabled>
+                        <button id="checkAnswerBtn" disabled>Verificar</button>
+                    </div>
+                    <div id="feedback" class="feedback-area">
+                        Feedback aparecerá aqui...
+                    </div>
+                </fieldset>
+            </div>
+        </div>
+
+        <!-- Visualização e Resultados (Fora das Abas - Sempre Visível) -->
+        <div class="visualizacao">
+            <div id="numberLineContainer">
+                <div id="numberLine"></div>
+                <div id="ticks"></div>
+                <div id="marker">🚶</div>
+            </div>
+        </div>
+
+        <div class="resultado">
+            <p id="equation">Equação: --</p>
+            <p id="explanation">Explicação: --</p>
+            <h2>Resultado Final: <span id="finalResult">?</span></h2>
+        </div>
+
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
