@@ -7,9 +7,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Conteúdo da Aba Manual
     const manualControls = document.getElementById('manualControls'); // O fieldset em si
-    const startNumInput = document.getElementById('startNum');
+    const startNumInput = document.getElementById('startNum'); // Agora type="text"
     const operationSelect = document.getElementById('operation');
-    const valueNumInput = document.getElementById('valueNum');
+    const valueNumInput = document.getElementById('valueNum'); // type="number"
     const executeBtn = document.getElementById('executeBtn');
 
     // Conteúdo da Aba Gerador
@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const difficultySelect = document.getElementById('difficulty');
     const generateProblemBtn = document.getElementById('generateProblemBtn');
     const problemDisplay = document.getElementById('problemDisplay');
-    const userAnswerInput = document.getElementById('userAnswer');
+    const userAnswerInput = document.getElementById('userAnswer'); // Agora type="text"
     const checkAnswerBtn = document.getElementById('checkAnswerBtn');
     const feedbackDisplay = document.getElementById('feedback');
 
@@ -42,6 +42,39 @@ document.addEventListener('DOMContentLoaded', () => {
         return Math.floor(Math.random() * (max - min + 1)) + min;
     }
 
+    /**
+     * Analisa o valor de um elemento input (type=text) como um inteiro.
+     * Mostra um alerta se a entrada não for um número inteiro válido.
+     * @param {HTMLInputElement} inputElement O elemento input a ser lido.
+     * @param {number} defaultValue O valor a ser retornado em caso de erro ou vazio.
+     * @returns {number} O número inteiro parseado ou o valor padrão.
+     */
+    function parseInputAsInt(inputElement, defaultValue = 0) {
+        const rawValue = inputElement.value.trim();
+
+        if (rawValue === '') {
+            return defaultValue; // Retorna padrão se vazio
+        }
+
+        // Regex: Opcional '-', seguido por um ou mais dígitos. Nenhum outro caractere permitido.
+        if (!/^-?\d+$/.test(rawValue)) {
+             alert(`Valor inválido: "${rawValue}". Por favor, insira apenas números inteiros (ex: 5, -3, 0).`);
+             inputElement.value = defaultValue.toString(); // Reseta o input para o padrão
+             return defaultValue;
+        }
+        const parsed = parseInt(rawValue, 10);
+
+        // Verifica se o parseInt resultou em NaN (pode acontecer com strings muito grandes que passam no regex)
+        if (isNaN(parsed)) {
+            alert(`Valor inválido ou muito grande: "${rawValue}". Usando ${defaultValue}.`);
+            inputElement.value = defaultValue.toString();
+             return defaultValue;
+        }
+
+        return parsed;
+    }
+
+
     // --- Funções de Abas ---
     function switchTab(targetTabId) {
         tabButtons.forEach(button => {
@@ -53,36 +86,41 @@ document.addEventListener('DOMContentLoaded', () => {
 
         tabPanes.forEach(pane => {
             pane.classList.remove('active');
-            if (pane.id === targetTabId + 'Content') { // Assume ID do pane como "tabIdContent"
+            if (pane.id === targetTabId + 'Content') {
                 pane.classList.add('active');
             }
         });
 
         // Resetar estado ao trocar de aba
         if (targetTabId === 'manual') {
-             resetProblemUI(); // Limpa a área do gerador se for para a aba manual
-             // Opcional: Pode resetar os inputs manuais também se desejar
-             // startNumInput.value = 0;
-             // valueNumInput.value = 1;
-             // updateMarkerPosition(0, false); // Reseta marcador
+             resetProblemUI();
+             // Reseta a visualização para o valor atual do input manual
+             const manualStartVal = parseInputAsInt(startNumInput, 0);
+             updateMarkerPosition(manualStartVal, false);
+             finalResultDisplay.textContent = manualStartVal;
+             equationDisplay.textContent = `Começando em: ${manualStartVal}`;
+             explanationDisplay.textContent = 'Escolha uma operação e clique em "Mover!"';
+
         } else if (targetTabId === 'generator') {
-             // Limpa textos de resultado/explicação da aba manual
-             equationDisplay.textContent = 'Equação: --';
-             explanationDisplay.textContent = 'Gere um problema ou volte para Exploração Manual.';
-             finalResultDisplay.textContent = '?';
-             // Garante que o marcador esteja visível no último estado do gerador ou resete
-             if (currentProblem) {
+             // Limpa textos relacionados à operação manual anterior
+             if (!currentProblem) { // Se não houver problema ativo, limpa tudo
+                equationDisplay.textContent = 'Equação: --';
+                explanationDisplay.textContent = 'Gere um problema ou volte para Exploração Manual.';
+                finalResultDisplay.textContent = '?';
+                updateMarkerPosition(0, false); // Reseta marcador para 0 se não houver problema
+             } else { // Se houver problema ativo, mostra o estado inicial dele
                  updateMarkerPosition(currentProblem.start, false);
-             } else {
-                 updateMarkerPosition(0, false); // Ou reseta para zero se não houver problema
+                 equationDisplay.textContent = `Começando em: ${currentProblem.start}`;
+                 explanationDisplay.textContent = 'Digite sua resposta e clique em Verificar.';
+                 finalResultDisplay.textContent = '?'; // Resultado ainda não calculado
              }
         }
     }
 
 
-    // --- Funções Principais --- (A maioria permanece igual)
+    // --- Funções Principais ---
 
-    function drawNumberLine() { /* ... (código inalterado) ... */
+    function drawNumberLine() {
         ticksContainer.innerHTML = '';
         const range = maxNum - minNum;
         const containerWidth = numberLineContainer.offsetWidth;
@@ -105,7 +143,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function updateMarkerPosition(number, animate = true) { /* ... (código inalterado) ... */
+    function updateMarkerPosition(number, animate = true) {
         const clampedNumber = Math.max(minNum, Math.min(maxNum, number));
         const range = maxNum - minNum;
         let positionPercent = 0;
@@ -116,25 +154,24 @@ document.addEventListener('DOMContentLoaded', () => {
         if (animate) {
             marker.style.transition = 'left 1s cubic-bezier(0.68, -0.55, 0.27, 1.55)';
         } else {
-            marker.style.transition = 'none'; // Sem animação para resets
+            marker.style.transition = 'none';
         }
         marker.style.left = `${positionPercent}%`;
 
-        // Reabilitar animação após um instante se foi desabilitada
         if (!animate) {
             setTimeout(() => {
                  marker.style.transition = 'left 1s cubic-bezier(0.68, -0.55, 0.27, 1.55)';
             }, 50);
         }
-        currentPosition = number;
+        currentPosition = number; // Atualiza a posição lógica apenas aqui
     }
 
-    function handleOperation(start, opType, val, showExplanation = true) { /* ... (código inalterado) ... */
+    function handleOperation(start, opType, val, showExplanation = true) {
         let effectiveValue = 0;
         let operationSymbol = '';
         let explanation = '';
         let finalNum = start;
-        let displayValue = Math.abs(val); // Valor para mostrar na equação
+        let displayValue = Math.abs(val);
 
         switch (opType) {
             case 'add_pos':
@@ -155,14 +192,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 effectiveValue = -displayValue;
                 operationSymbol = '-';
                 explanation = `Subtrair ${displayValue} significa mover ${displayValue} unidades para a ESQUERDA.`;
-                finalNum = start + effectiveValue; // Subtrair
+                finalNum = start + effectiveValue;
                 equationDisplay.textContent = `Equação: ${start} ${operationSymbol} ${displayValue} = ?`;
                 break;
             case 'sub_neg':
-                effectiveValue = displayValue; // Subtrair negativo -> somar positivo
+                effectiveValue = displayValue;
                 operationSymbol = '-';
                 explanation = `Subtrair um negativo (-${displayValue}) é o oposto de subtrair um positivo! É o mesmo que SOMAR ${displayValue}. Movemos ${displayValue} unidades para a DIREITA!`;
-                finalNum = start - (-displayValue); // Calcular corretamente
+                finalNum = start - (-displayValue);
                 equationDisplay.textContent = `Equação: ${start} ${operationSymbol} (-${displayValue}) = ?`;
                 break;
         }
@@ -173,11 +210,8 @@ document.addEventListener('DOMContentLoaded', () => {
              explanationDisplay.textContent = 'Explicação aparecerá após verificar a resposta.';
         }
 
+        updateMarkerPosition(finalNum, showExplanation);
 
-        // Atualiza a posição do marcador (inicia a animação)
-        updateMarkerPosition(finalNum, showExplanation); // Anima só se for mostrar explicação
-
-        // Mostra o resultado final APÓS a animação (se houver)
         const delay = showExplanation ? 800 : 0;
         setTimeout(() => {
             finalResultDisplay.textContent = finalNum;
@@ -186,10 +220,10 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }, delay);
 
-        return finalNum; // Retorna o resultado calculado
+        return finalNum;
     }
 
-    function calculateResult(start, opType, val) { /* ... (código inalterado) ... */
+    function calculateResult(start, opType, val) {
         switch (opType) {
             case 'add_pos': return start + val;
             case 'add_neg': return start + (-val);
@@ -199,122 +233,121 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function generateProblem() { /* ... (lógica interna inalterada, apenas ajustes na UI) ... */
+    function generateProblem() {
         const level = parseInt(difficultySelect.value);
         let start, val, opType, answer;
         let problemText = '';
 
-        // Limpa UI anterior do gerador
         resetProblemUI();
-        // Não precisa mais desabilitar controles manuais, pois estão em outra aba
 
-        // Lógica de geração por nível (INALTERADA)
+        // Lógica de geração por nível (Simplificada e corrigida para evitar cruzar zero no Nível 1)
         switch (level) {
-             case 1: // Básico: +/- sem cruzar zero
-                opType = Math.random() < 0.5 ? 'add_pos' : 'sub_pos';
-                if (Math.random() < 0.5) { // Lado Positivo
-                    start = getRandomInt(1, maxNum - 1);
-                    val = getRandomInt(1, start > 0 ? start : 1); // Garante que não cruze zero na subtração, minimo 1
-                     if (opType === 'add_pos') val = getRandomInt(1, maxNum - start);
-                     else if (start - val <= 0 && start > 0) val = getRandomInt(1, start > 0 ? start -1: 1); // Evita ir a zero ou negativo
-                } else { // Lado Negativo
-                    start = getRandomInt(minNum + 1, -1);
-                     val = getRandomInt(1, Math.abs(start) > 0 ? Math.abs(start) : 1); // Garante que não cruze zero
-                     if (opType === 'add_pos') val = getRandomInt(1, Math.abs(minNum - start));
-                     else if(start + val >= 0 && start < 0) val = getRandomInt(1, Math.abs(start)>0 ? Math.abs(start)-1 : 1); // Evita ir a zero ou positivo
+            case 1: // Básico: +/- sem cruzar zero
+                 start = getRandomInt(minNum + 1, maxNum - 1); // Evita min/max
+                 if (start === 0) start = getRandomInt(1, 5) * (Math.random() < 0.5 ? 1 : -1); // Evita começar no zero
 
-                     // Simplificando: Operação no lado negativo para não cruzar zero
-                     opType = 'add_neg'; // Ex: -3 + (-2)
-                     val = getRandomInt(1, Math.abs(minNum - start));
-                     if (start + (-val) > -1) { // Se cruzar zero, ajusta
-                          val = getRandomInt(1, Math.abs(start) > 0 ? Math.abs(start) : 1);
-                     }
-                }
-                // Forçar operações simples no nível 1 para não cruzar zero
                  if (start > 0) { // Lado positivo
                      opType = Math.random() < 0.5 ? 'add_pos' : 'sub_pos';
-                     if (opType === 'sub_pos') { val = getRandomInt(1, start); } // Garante valor <= start
-                     else { val = getRandomInt(1, maxNum - start); } // Garante não exceder maxNum
-                 } else if (start < 0) { // Lado negativo
-                     opType = Math.random() < 0.5 ? 'add_neg' : 'sub_neg'; // Adicionar negativo (esquerda) ou Subtrair negativo (direita)
-                     if (opType === 'add_neg') { val = getRandomInt(1, Math.abs(minNum - start)); } // Garante não exceder minNum
-                     else { val = getRandomInt(1, Math.abs(start)); } // Garante não cruzar zero para direita
-                 } else { // start === 0
-                      opType = Math.random() < 0.5 ? 'add_pos' : 'add_neg';
-                      val = getRandomInt(1, 10);
+                     if (opType === 'sub_pos') {
+                         val = getRandomInt(1, start); // Garante valor <= start para não cruzar zero
+                         if (start - val === 0 && start !== 0) val = getRandomInt(1, start > 1 ? start - 1 : 1); // Evita resultado 0 se não começou em 0
+                     } else {
+                         val = getRandomInt(1, maxNum - start); // Garante não exceder maxNum
+                     }
+                 } else { // Lado negativo (start < 0)
+                      opType = Math.random() < 0.5 ? 'add_neg' : 'sub_neg'; // Mover esquerda ou direita sem cruzar zero
+                      if (opType === 'add_neg') { // Mover mais para esquerda
+                          val = getRandomInt(1, Math.abs(minNum - start));
+                      } else { // Mover para direita (subtrair negativo)
+                           val = getRandomInt(1, Math.abs(start)); // Garante não cruzar zero
+                           if (start - (-val) === 0 && start !== 0) val = getRandomInt(1, Math.abs(start) > 1 ? Math.abs(start) - 1 : 1); // Evita resultado 0
+                      }
                  }
-
                 break;
-             case 2: // Cruzando Zero
-                 start = getRandomInt(minNum + 3, maxNum - 3); // Evita extremos
-                 // Garante que cruze o zero
-                 if (start > 0) { // Se positivo, precisa subtrair mais que o start
+            case 2: // Cruzando Zero
+                 start = getRandomInt(minNum + 3, maxNum - 3);
+                 if (start === 0) start = getRandomInt(1, 3) * (Math.random() < 0.5 ? 1 : -1); // Evita começar no zero
+
+                 if (start > 0) { // Precisa subtrair mais que 'start' ou adicionar negativo > 'start'
                      opType = Math.random() < 0.5 ? 'sub_pos': 'add_neg';
-                     val = getRandomInt(start + 1, start + 5);
-                 } else { // Se negativo, precisa somar mais que o |start|
+                     val = getRandomInt(start + 1, start + 5); // Garante cruzar
+                 } else { // Precisa somar mais que |start| ou subtrair negativo > |start|
                      opType = Math.random() < 0.5 ? 'add_pos': 'sub_neg';
-                     val = getRandomInt(Math.abs(start) + 1, Math.abs(start) + 5);
+                     val = getRandomInt(Math.abs(start) + 1, Math.abs(start) + 5); // Garante cruzar
                  }
                  break;
-             case 3: // Adicionando Negativos (+ (-))
-                start = getRandomInt(minNum + 5, maxNum);
+            case 3: // Adicionando Negativos (+ (-)) -> Pode ou não cruzar zero
+                start = getRandomInt(minNum + 2, maxNum); // Pode começar mais perto do min
                 val = getRandomInt(1, 10);
                 opType = 'add_neg';
                 break;
-             case 4: // Subtraindo Negativos (- (-))
-                start = getRandomInt(minNum, maxNum - 5);
+            case 4: // Subtraindo Negativos (- (-)) -> Pode ou não cruzar zero
+                start = getRandomInt(minNum, maxNum - 2); // Pode começar mais perto do max
                 val = getRandomInt(1, 10);
                 opType = 'sub_neg';
                 break;
-             case 5: // Misto (todas as operações)
-             default:
-                start = getRandomInt(minNum + 2, maxNum - 2);
+            case 5: // Misto (todas as operações)
+            default:
+                start = getRandomInt(minNum + 1, maxNum - 1);
+                 if (start === 0) start = 1; // Evita start 0 para ter mais variedade
                 val = getRandomInt(1, 10);
                 const opTypes = ['add_pos', 'add_neg', 'sub_pos', 'sub_neg'];
                 opType = opTypes[getRandomInt(0, 3)];
+
+                // Evitar resultados triviais no modo misto, se possível (ex: 5 + (-5))
+                 if (calculateResult(start, opType, val) === 0 && start !== 0) {
+                     val = getRandomInt(1, 8); // Tenta um valor diferente
+                 }
+
                 break;
         }
 
 
-        // Recalcula a resposta final
         answer = calculateResult(start, opType, val);
 
-        // Formata o texto do problema (INALTERADO)
+        // Formata o texto do problema
         let opSymbol = '';
         let valueText = '';
         switch (opType) {
             case 'add_pos': opSymbol = '+'; valueText = val; break;
-            case 'add_neg': opSymbol = '+'; valueText = `(${-val})`; break;
+            case 'add_neg': opSymbol = '+'; valueText = `(${-val})`; break; // Mostra o negativo explicitamente
             case 'sub_pos': opSymbol = '-'; valueText = val; break;
-            case 'sub_neg': opSymbol = '-'; valueText = `(${-val})`; break;
+            case 'sub_neg': opSymbol = '-'; valueText = `(${-val})`; break; // Mostra o negativo explicitamente
         }
         problemText = `Resolva: ${start} ${opSymbol} ${valueText} = ?`;
 
-        // Armazena o problema atual
         currentProblem = { start, operation: opType, value: val, answer };
 
-        // Atualiza a UI do gerador
+        // Atualiza a UI do gerador e compartilhada
         problemDisplay.textContent = problemText;
-        updateMarkerPosition(start, false); // Posiciona marcador no início, sem animar
-        finalResultDisplay.textContent = '?'; // Limpa resultado compartilhado
-        equationDisplay.textContent = `Começando em: ${start}`; // Mostra início no compartilhado
+        updateMarkerPosition(start, false);
+        finalResultDisplay.textContent = '?';
+        equationDisplay.textContent = `Começando em: ${start}`;
         explanationDisplay.textContent = 'Digite sua resposta e clique em Verificar.';
         checkAnswerBtn.disabled = false;
         userAnswerInput.disabled = false;
         userAnswerInput.focus();
     }
 
-    function checkAnswer() { /* ... (lógica interna inalterada, UI changes) ... */
+    function checkAnswer() {
         if (!currentProblem) return;
 
-        const userAnswer = parseInt(userAnswerInput.value);
+        // Usa a função de parse robusta
+        const userAnswer = parseInputAsInt(userAnswerInput, NaN); // Passa NaN como padrão para poder checar depois
 
+        // Se parseInputAsInt retornou NaN (ou seja, falhou e não mostrou alerta antes), trata aqui.
         if (isNaN(userAnswer)) {
-            feedbackDisplay.textContent = "Por favor, digite um número como resposta.";
-            feedbackDisplay.className = 'feedback-area feedback-incorrect';
+             if (userAnswerInput.value.trim() !== '') { // Só mostra se tinha algo digitado
+                 feedbackDisplay.textContent = "Por favor, digite um número válido como resposta.";
+                 feedbackDisplay.className = 'feedback-area feedback-incorrect';
+             } else {
+                  feedbackDisplay.textContent = "Por favor, digite uma resposta.";
+                  feedbackDisplay.className = 'feedback-area feedback-incorrect';
+             }
             return;
         }
 
+        // Compara a resposta parseada com a resposta correta
         if (userAnswer === currentProblem.answer) {
             feedbackDisplay.textContent = "Correto! 🎉 Veja a explicação na reta numérica.";
             feedbackDisplay.className = 'feedback-area feedback-correct';
@@ -325,42 +358,39 @@ document.addEventListener('DOMContentLoaded', () => {
             handleOperation(currentProblem.start, currentProblem.operation, currentProblem.value, true);
         }
 
-        // Desabilita campos de resposta após verificar
         checkAnswerBtn.disabled = true;
         userAnswerInput.disabled = true;
-        // Não precisa reabilitar controles manuais aqui
         generateProblemBtn.focus();
     }
 
-    function resetProblemUI() { /* ... (código inalterado) ... */
+     function resetProblemUI() {
         problemDisplay.textContent = 'Clique em "Gerar Novo Problema"';
         userAnswerInput.value = '';
         userAnswerInput.disabled = true;
         checkAnswerBtn.disabled = true;
         feedbackDisplay.textContent = '';
         feedbackDisplay.className = 'feedback-area';
-        // Não limpa mais eq/expl/result aqui, pois são compartilhados
         currentProblem = null;
+        // Não limpa mais eq/expl/result aqui diretamente, pois switchTab cuida disso.
      }
 
 
     // --- Inicialização ---
     drawNumberLine();
-    // Define a aba inicial ativa (manual)
-    switchTab('manual'); // Garante que a aba manual esteja ativa no início
-    currentPosition = parseInt(startNumInput.value) || 0;
-    updateMarkerPosition(currentPosition, false);
-    finalResultDisplay.textContent = currentPosition;
-    equationDisplay.textContent = `Começando em: ${currentPosition}`;
-    explanationDisplay.textContent = 'Use o controle manual ou mude para a aba Gerador de Problemas.';
-    // resetProblemUI(); // Reset é chamado dentro do switchTab inicial
+    switchTab('manual'); // Define a aba inicial e atualiza a UI
+    // A linha abaixo não é mais necessária, pois switchTab('manual') já faz isso
+    // currentPosition = parseInputAsInt(startNumInput, 0);
+    // updateMarkerPosition(currentPosition, false);
+    // finalResultDisplay.textContent = currentPosition;
+    // equationDisplay.textContent = `Começando em: ${currentPosition}`;
+    // explanationDisplay.textContent = 'Use o controle manual ou mude para a aba Gerador de Problemas.';
 
 
     // --- Event Listeners ---
 
     // Troca de Abas
     tabButtonsContainer.addEventListener('click', (e) => {
-        if (e.target.classList.contains('tab-button')) {
+        if (e.target.classList.contains('tab-button') && !e.target.classList.contains('active')) {
             const targetTab = e.target.dataset.tab;
             switchTab(targetTab);
         }
@@ -369,24 +399,43 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Controle Manual (Aba Manual)
     executeBtn.addEventListener('click', () => {
-        const startNum = parseInt(startNumInput.value) || 0;
+        // Validação robusta com parseInputAsInt
+        const startNum = parseInputAsInt(startNumInput, 0);
         const operation = operationSelect.value;
-        const value = parseInt(valueNumInput.value);
+        // Validação específica para valueNum (ainda type=number, mas garante positivo)
+        const valueRaw = parseInt(valueNumInput.value || "1", 10);
+        const value = Math.max(1, isNaN(valueRaw) ? 1 : valueRaw); // Garante que seja >= 1
+        if (valueRaw <= 0 || isNaN(valueRaw)) {
+             alert("O valor da operação deve ser um número positivo maior que zero.");
+             valueNumInput.value = '1';
+             // Não precisa retornar aqui, pois 'value' já foi corrigido para 1
+        }
 
-         if (isNaN(value) || value <= 0) {
-            alert("Por favor, insira um valor positivo maior que zero para a operação manual.");
-            valueNumInput.value = 1;
-            return;
-         }
-        // Não precisa mais limpar a área de problema, a troca de aba faz isso
-        updateMarkerPosition(startNum, false);
+        updateMarkerPosition(startNum, false); // Garante que o marcador está onde o input diz
         handleOperation(startNum, operation, value, true);
     });
+
+    // Atualiza a posição do marcador enquanto digita no campo manual
     startNumInput.addEventListener('input', () => {
-         const startNum = parseInt(startNumInput.value) || 0;
-         updateMarkerPosition(startNum, false);
-         finalResultDisplay.textContent = startNum;
-         equationDisplay.textContent = `Começando em: ${startNum}`;
+         const rawValue = startNumInput.value.trim();
+         let displayValue = '?';
+         let posValue = currentPosition; // Mantém a posição antiga se inválido
+
+         // Tenta parsear apenas para atualizar visualização, sem alerta imediato
+         if (/^-?\d+$/.test(rawValue) || rawValue === '' || rawValue === '-') {
+             const parsed = parseInt(rawValue, 10);
+             if (!isNaN(parsed)) {
+                 displayValue = parsed;
+                 posValue = parsed;
+             } else if (rawValue === '' || rawValue === '-') {
+                 displayValue = rawValue; // Mostra '-' ou nada enquanto digita
+                 posValue = 0; // Ou mantém a anterior? Decide. Vamos resetar pra 0.
+             }
+         } // Se não for número, if ou '-', mantém o valor anterior (não atualiza display)
+
+         updateMarkerPosition(posValue, false);
+         finalResultDisplay.textContent = displayValue;
+         equationDisplay.textContent = `Começando em: ${displayValue}`;
          explanationDisplay.textContent = 'Escolha uma operação e clique em "Mover!"';
     });
 
@@ -399,19 +448,22 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Responsividade (sem mudanças aqui)
+    // Responsividade
     window.addEventListener('resize', () => {
         drawNumberLine();
-        // Determina a posição correta baseada na aba ativa
+        // Recalcula a posição atual baseada no estado da UI
         const activeTabId = document.querySelector('.tab-button.active').dataset.tab;
+        let positionToUpdate = 0;
         if (activeTabId === 'manual') {
-            currentPosition = parseInt(startNumInput.value) || 0;
+            positionToUpdate = parseInputAsInt(startNumInput, currentPosition); // Usa posição atual se inválido
         } else if (currentProblem) {
-             currentPosition = currentProblem.start; // Ou a posição final do problema anterior, se preferir
+             // Decide se mostra o início do problema ou a posição final atual
+             // Vamos manter a posição final calculada (currentPosition)
+             positionToUpdate = currentPosition;
         } else {
-            currentPosition = 0; // Default
+            positionToUpdate = 0; // Default
         }
-        updateMarkerPosition(currentPosition, false);
+         updateMarkerPosition(positionToUpdate, false);
     });
 
 });
