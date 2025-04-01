@@ -385,3 +385,152 @@ legend {
     color: #999;
 }
 */
+
+/* Adicione ao final do seu style.css */
+
+/* --- Responsividade --- */
+
+/* Estilos para Tablets e Telas Médias (Ex: até 768px) */
+@media (max-width: 768px) {
+    .container {
+        width: 95%; /* Ocupa mais largura da tela */
+        padding: 20px; /* Reduz padding lateral */
+    }
+
+    h1 {
+        font-size: 1.8em; /* Reduz um pouco o título */
+    }
+
+    .controles {
+        flex-direction: column; /* Empilha os controles */
+        align-items: stretch; /* Faz os itens ocuparem a largura */
+        gap: 15px; /* Aumenta o espaçamento vertical */
+    }
+
+    .controles .input-group {
+         width: 100%; /* Cada grupo ocupa a largura total */
+         align-items: center; /* Centraliza label/input */
+    }
+
+     .controles .input-group input,
+     .controles .input-group select {
+         width: 80%; /* Input/select ocupa a maior parte */
+         max-width: 250px; /* Limita a largura máxima */
+     }
+
+    .controles button {
+         width: 60%;
+         max-width: 200px;
+         align-self: center; /* Centraliza o botão */
+         padding: 12px; /* Aumenta área de toque */
+    }
+
+    .problem-controls {
+        flex-direction: column; /* Empilha Nível e Botão Gerar */
+        gap: 15px;
+    }
+
+     .problem-controls .input-group {
+         width: 100%;
+     }
+     .problem-controls button {
+         width: 70%;
+     }
+
+
+    .answer-area {
+        flex-direction: column; /* Empilha label, input e botão */
+        align-items: center;
+        gap: 10px;
+    }
+     .answer-area label {
+         margin-bottom: 5px;
+     }
+     .answer-area input {
+         width: 50%;
+         max-width: 150px;
+     }
+     .answer-area button {
+         width: 40%;
+         max-width: 120px;
+         padding: 10px;
+     }
+
+
+    #numberLineContainer {
+        min-width: 90%; /* Reduz a largura mínima em telas menores */
+    }
+
+    /* Ajuste opcional para os ticks/labels se ficarem muito apertados */
+    .tick-label {
+        font-size: 0.8em;
+    }
+
+    .tab-buttons {
+        /* Permite que os botões quebrem linha se não couberem */
+        flex-wrap: wrap;
+        justify-content: center; /* Centraliza os botões quando quebram linha */
+        border-bottom: none; /* Remove linha inferior, cada botão ativo terá a sua */
+    }
+    .tab-button {
+        margin-bottom: 5px; /* Espaço quando quebrar linha */
+        border-radius: 5px; /* Borda arredondada completa */
+         border-bottom: 2px solid transparent; /* Espaço reservado para borda ativa */
+    }
+    .tab-button.active {
+        border-bottom: 2px solid #004d40; /* Borda inferior forte na ativa */
+    }
+
+}
+
+/* Estilos Adicionais para Celulares (Ex: até 480px) */
+@media (max-width: 480px) {
+    .container {
+        padding: 15px;
+    }
+
+    h1 {
+        font-size: 1.5em;
+    }
+
+    .resultado h2 {
+        font-size: 1.1em;
+    }
+    #finalResult {
+         font-size: 1.3em;
+    }
+     .resultado p {
+        font-size: 1em;
+     }
+
+    /* Reduz ainda mais a fonte dos números na reta se necessário */
+     .tick-label {
+         /* font-size: 0.7em; */ /* Descomente se precisar */
+     }
+      #marker {
+         font-size: 2em; /* Reduz um pouco o marcador */
+      }
+
+      /* Garante que os botões das abas não fiquem muito grandes */
+      .tab-button {
+          padding: 8px 15px;
+          font-size: 0.9em;
+      }
+}
+
+/* Para garantir que a rolagem horizontal da reta numérica funcione bem no toque */
+.visualizacao {
+    -webkit-overflow-scrolling: touch; /* Melhora a experiência de rolagem no iOS */
+}
+
+/* Correção para input[type=text] com inputmode=numeric não mostrar setinhas */
+/* Navegadores baseados em Webkit/Blink */
+input[type="text"][inputmode="numeric"]::-webkit-outer-spin-button,
+input[type="text"][inputmode="numeric"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+/* Firefox */
+input[type="text"][inputmode="numeric"] {
+    -moz-appearance: textfield;
+}
